@@ -105,6 +105,7 @@
     <string name="add_readings_button">Add</string>
     <string name="previous_readings"> Previous Measurements </string>
     <string name="weekly_avg"> Weekly Average </string>
+    <string name="projected_weight"> Projected Weight </string>
     <string name="kilograms">Kg\u0020</string>
     <string name="valid_weight_error_message"> Weight must be between 0 and 1000</string>
 
