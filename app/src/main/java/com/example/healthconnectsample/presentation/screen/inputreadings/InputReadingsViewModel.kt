@@ -16,7 +16,6 @@
 package com.example.healthconnectsample.presentation.screen.inputreadings
 
 import android.os.RemoteException
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +32,7 @@ import java.io.IOException
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
+import java.util.*
 
 class InputReadingsViewModel(private val healthConnectManager: HealthConnectManager) :
     ViewModel() {
@@ -54,6 +53,9 @@ class InputReadingsViewModel(private val healthConnectManager: HealthConnectMana
         private set
 
     val permissionsLauncher = healthConnectManager.requestPermissionsActivityContract()
+
+    var projectedWeight: MutableState<Double> = mutableStateOf(100.0)
+        private set
 
     fun initialLoad() {
         viewModelScope.launch {
@@ -94,6 +96,34 @@ class InputReadingsViewModel(private val healthConnectManager: HealthConnectMana
         readingsList.value = healthConnectManager.readWeightInputs(startOfDay.toInstant(), now)
         weeklyAvg.value =
             healthConnectManager.computeWeeklyAverage(startOfDay.toInstant(), endofWeek)
+        calculateProjectedWeight()
+    }
+
+    private fun calculateProjectedWeight() {
+        if (readingsList.value.size > 2) {
+            projectedWeight.value = doLinearInterpolation(readingsList.value)
+        } else {
+            projectedWeight.value = 0.0
+        }
+    }
+
+    private fun doLinearInterpolation(values: List<WeightRecord>): Double {
+        val x = values.size
+
+        val x1 = values.size - 2
+        val x2 = values.size - 1
+
+        val y1 = values[x1].weight.inKilograms
+        val y2 = values[x2].weight.inKilograms
+
+        val numerator = y2 - y1
+        val denominator = x2 - x1
+
+        // Formula
+        // y = y1 + (x-x1) ((y2-y1) / (x2-x1))
+
+        return y1 + (x - x1) * (numerator / denominator)
+
     }
 
     /**
